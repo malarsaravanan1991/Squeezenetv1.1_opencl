@@ -1,6 +1,7 @@
 //pipe int p0 __attribute__((xcl_reqd_pipe_depth(128)));
 __kernel
-void  conv1(global const float* image, global const float* Filter_conv, global float* output_first_layer, int input_channel, int input_size, int stride, int output_size) {
+void  conv1(global const float* image, global const float* Filter_conv, global float* output_first_layer, 
+	int input_channel, int input_size, int stride, int output_size,int start_channel_fire) {
 
 
 	int filter_loc = 0;
@@ -8,7 +9,7 @@ void  conv1(global const float* image, global const float* Filter_conv, global f
 
 	int offset = get_global_id(0);
 	Filter_conv += offset * input_channel * 9;
-	output_first_layer += (offset)* output_size * output_size;
+	output_first_layer += (offset + start_channel_fire)* output_size * output_size;
 
 	int w = 0, h = 0;
 	for (int i = 0; i < output_size; i++)
@@ -16,6 +17,7 @@ void  conv1(global const float* image, global const float* Filter_conv, global f
 		for (int j = 0; j < output_size; j++)
 		{
 			float tmp = 0;
+			
 			for (int k = 0; k < input_channel; k++)
 			{
 				for (int l = 0; l < 3; l++)
@@ -87,6 +89,7 @@ __kernel void conv2(global const float* input_image_conv1x1, global const float*
 	filter_conv1x1 += filter_index * input_channels;
 	output_conv1x1_layer += filter_index * input_size * input_size;//start_channel is for 1x1 feature map in fire layer
 		//loop over output feature map
+	
 	for (int i = 0; i < input_size; i++)
 	{
 		for (int j = 0; j < input_size; j++)
@@ -97,10 +100,9 @@ __kernel void conv2(global const float* input_image_conv1x1, global const float*
 				//	tmp += input_image_conv1x1[0] * filter_conv1x1[0];
 				tmp += input_image_conv1x1[k * input_size * input_size + i * input_size + j] * filter_conv1x1[k];
 
+				//add relu after conv
+				output_conv1x1_layer[i * input_size + j] = (tmp > 0.0) ? tmp : 0.0;
 			}
-			//add relu after conv
-			output_conv1x1_layer[i * input_size + j] = (tmp > 0.0) ? tmp : 0.0;
-
 		}
 	}
 }
