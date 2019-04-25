@@ -108,13 +108,16 @@ int main()
 	unsigned int j;
 	std::vector<float> image_data;
 	image_data.resize(3 * row * col);
+	int k = 0;
 	for (i = 2; i >= 0; i--)
 	{
 		for (j = 0; j < row * col; j++)
 		{
-			image_data[i * row * col + j] = rgbchannel[i].data[j];
+			image_data[k * row * col + j] = rgbchannel[i].data[j];
 
 		}
+		k++;
+		
 	}
 	//namedWindow("Display window", WINDOW_AUTOSIZE); // Create a window for display.
 	//imshow("Display window", image_data);                // Show our image inside it.
