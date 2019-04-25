@@ -6,6 +6,7 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgcodecs.hpp>
 #include <time.h>
 
 using namespace cv;
@@ -14,10 +15,7 @@ using namespace std;
 #define row 512
 #define col 512
 
-
-
 /*Program to read the kernel code */
-
 long LoadOpenCLKernel(char const* path, char** buf) {
 	FILE* fp;
 	size_t fsz;
@@ -69,16 +67,29 @@ long LoadOpenCLKernel(char const* path, char** buf) {
 }
 
 
+int decode_image(char frame[64*1*16], char filename[]) {
+	FILE* pFile;
+	pFile = fopen(filename, "r");
+	if (pFile == NULL) {
+		fprintf(stderr, "Could not open %s\n", filename);
+		return -1;
+	}
+	fseek(pFile, 15, SEEK_SET);
+	fread(frame, sizeof(char), 64 * 1 * 16, pFile);
+	fclose(pFile);
+	return 0;
+}
 
 
 int main()
 {
 
+	//std::string binaryFile = "./xclbin/cnn.sw_emu.xilinx_aws-vu9p-f1-04261818_dynamic_5_0.xclbin";
 
 	cv::Mat inputImageRaw, b, g, r;
 	const char* inputFilename = "cat.jpg";
 	inputImageRaw = cv::imread(inputFilename);
-
+	//cout << "M = " << endl << " " << inputImageRaw << endl << endl;
 	if (!inputImageRaw.data)
 	{
 		std::cout << "could not find the file";
@@ -87,13 +98,13 @@ int main()
 	}
 
 	cv::Mat rgbchannel[3];
-
 	// Splits the image in to RGB Channels
 	cv::split(inputImageRaw, rgbchannel);
-
 	//Opens the weight file for conv1 layer
+	//***********************************Getting  weights of the filter in to the array*******************//
 	std::fstream myfile("conv1.txt", std::ios_base::in);
 	float a;
+
 	std::vector<float> Filter_conv1;
 	Filter_conv1.resize(64 * 3 * 3 * 3);
 	int i = 0;
@@ -103,10 +114,17 @@ int main()
 		//std::cout << Filter_conv1[i] << ' ';
 		i++;
 	}
+
+	//***********************************Getting  weights of the filter in to the array*******************//
+	char Filter_conv_fire1[64 * 1 * 16];
+	char filename[100] = "fire2squeeze1x1.txt" ;
+	decode_image(Filter_conv_fire1, filename);
+	printf("array %c \n", Filter_conv_fire1[0]);
 	//import image to an array
-	//printf("array %f \n", Filter_conv1);
+	
 	unsigned int j;
 	std::vector<float> image_data;
+
 	image_data.resize(3 * row * col);
 	int k = 0;
 	for (i = 2; i >= 0; i--)
@@ -117,7 +135,6 @@ int main()
 
 		}
 		k++;
-		
 	}
 	//namedWindow("Display window", WINDOW_AUTOSIZE); // Create a window for display.
 	//imshow("Display window", image_data);                // Show our image inside it.
@@ -136,7 +153,7 @@ int main()
 			(cl_context_properties)(platforms[0])(),
 			0
 		};
-		cl::Context context(CL_DEVICE_TYPE_ALL, cps);
+		cl::Context context(CL_DEVICE_TYPE_GPU, cps);
 
 		// Get a list of devices on this platform
 		std::vector<cl::Device> devices = context.getInfo<CL_CONTEXT_DEVICES>();
@@ -144,26 +161,27 @@ int main()
 		// Create a command queue and use the first device
 		cl::CommandQueue queue = cl::CommandQueue(context, devices[0]);
 		//cl_command_queue queue = clCreateCommandQueue(context, devices[0], CL_QUEUE_PROFILING_ENABLE, &err);
+
 		//checkError(status, "Failed to create command queue");
 		// Read source file
-		/*std::ifstream sourceFile("kernel.cl");
+		std::ifstream sourceFile("kernel.cl");
 		std::string sourceCode(
 			std::istreambuf_iterator<char>(sourceFile),
 			(std::istreambuf_iterator<char>()));
 		cl::Program::Sources source(1, std::make_pair(sourceCode.c_str(), sourceCode.length() + 1));
-		*/
+		/*
 		cl_int err;
 		char* KernelBinary;
-		const char* binaryFile = "./xclbin/cnn.hw_emu.xilinx_aws-vu9p-f1-04261818_dynamic_5_0.xclbin";
+		const char* binaryFile = "./xclbin/cnn.sw_emu.xilinx_aws-vu9p-f1-04261818_dynamic_5_0.xclbin";
 		size_t fileBufSize = LoadOpenCLKernel(binaryFile, &KernelBinary);
-		cl::Program::Binaries bins{ {KernelBinary, fileBufSize} };
+		cl::Program::Binaries bins{{KernelBinary, fileBufSize} };
 		cl::Program program(context, devices, bins, NULL, &err);
 		if (fileBufSize < 0L) {
 			perror("File read failed");
 			return 1;
-		}
+		}*/
 		// Make program of the source code in the context
-		//cl::Program program = cl::Program(context, source);
+		cl::Program program = cl::Program(context, source);
 
 		// Build program for these specific devices
 		program.build(devices);
@@ -196,12 +214,8 @@ int main()
 
 		cl::NDRange global(64);
 		cl::NDRange local(1);
-		//double total = 0.0;
-		//double start_time = getCurrentTimestamp();
 		queue.enqueueNDRangeKernel(kernel, cl::NullRange, global, local);
-		//double end_time = getCurrentTimestamp();
-		//printf("block3 takes: %0.3f ms\r\n", (end_time - start_time)* 1e3);
-		//total += (end_time - start_time);
+
 		std::vector<float> output;
 		output.resize(255 * 255 * 1 * 64);
 		queue.enqueueReadBuffer(output_first_layer, CL_TRUE, 0, ((255 * 255 * 1 * 64) * sizeof(float)), output.data());
@@ -232,6 +246,37 @@ int main()
 		output2.resize(127 * 127 * 1 * 64);
 		queue.enqueueReadBuffer(output_second_layer, CL_TRUE, 0, ((127 * 127 * 1 * 64) * sizeof(float)), output2.data());
 		printf("output at host:%f", output2[0]);
+
+		/***********************************************Fire block 1 - conv 1x1 ****************************************************/
+		cl::Kernel kernelconv1x1fire1(program, "conv2");
+
+		// Create memory buffers
+
+		cl::Buffer Filter_conv_fire1_block1 = cl::Buffer(context, CL_MEM_READ_ONLY, 64 * 1 * 16 * sizeof(float));
+		cl::Buffer output_fire1_conv1x1_layer = cl::Buffer(context, CL_MEM_READ_WRITE, 127 * 127 * 1 * 16 * sizeof(float));
+
+		// Copy lists A and B to the memory buffers
+		queue.enqueueWriteBuffer(Filter_conv_fire1_block1, CL_TRUE, 0, 64 * 1 * 16 * sizeof(float), Filter_conv_fire1);
+
+
+		input_channel = 64;
+		input_size = 127;
+
+		kernelconv1x1fire1.setArg(0, output_second_layer);
+		kernelconv1x1fire1.setArg(1, Filter_conv_fire1_block1);
+		kernelconv1x1fire1.setArg(2, output_fire1_conv1x1_layer);
+		kernelconv1x1fire1.setArg(3, input_channel);
+		kernelconv1x1fire1.setArg(4, input_size);
+
+
+		cl::NDRange global2(16);
+		cl::NDRange local2(1);
+		queue.enqueueNDRangeKernel(kernelconv1x1fire1, cl::NullRange, global2, local2);
+
+		std::vector<float> output3;
+		output3.resize(127 * 127 * 1 * 16);
+		queue.enqueueReadBuffer(output_fire1_conv1x1_layer, CL_TRUE, 0, ((127 * 127 * 1 * 16) * sizeof(float)), output3.data());
+		printf("output at host:%f", output3[0]);
 
 
 	}
