@@ -143,7 +143,7 @@ int main()
 
 		zf++;
 	}
-	std::cout << Filter_convexpand_fire1[64] << ' ';
+	std::cout << Filter_convexpand_fire1[1] << ' ';
 
 	
 	//import image to an array
@@ -305,12 +305,12 @@ int main()
 		output3.resize(127 * 127 * 1 * 16);
 		queue.enqueueReadBuffer(output_fire1_conv1x1_layer, CL_TRUE, 0, ((127 * 127 * 1 * 16) * sizeof(float)), output3.data());
 		printf("output at third squeezelayer:%f \n", output3[0]);
-
+		
 		/***********************************************Fire block 1 - expand conv 1x1 ****************************************************/
-		cl::Kernel kernelconv1x1expandfire1(program, "conv2");
+		cl::Kernel kernelconv1x1expandfire1(program, "conv3");
 		// Create memory buffers
 		cl::Buffer Filter_convexpand_fire1_block1 = cl::Buffer(context, CL_MEM_READ_ONLY, 64 * 1 * 16 * sizeof(float));
-		cl::Buffer output_fire1_conv1x1expand_layer = cl::Buffer(context, CL_MEM_READ_WRITE, 127 * 127 * 1 * 64 * sizeof(float));
+		cl::Buffer output_fire1_conv1x1expand_layer = cl::Buffer(context, CL_MEM_READ_WRITE, 127 * 127 * 1 * 128 * sizeof(float));
 		// Copy lists A and B to the memory buffers
 		queue.enqueueWriteBuffer(Filter_convexpand_fire1_block1, CL_TRUE, 0, 64 * 1 * 16 * sizeof(float), Filter_convexpand_fire1.data());
 		
@@ -329,9 +329,9 @@ int main()
 		queue.enqueueNDRangeKernel(kernelconv1x1expandfire1, cl::NullRange, global3, local3);
 
 		std::vector<float> output4;
-		output4.resize(127 * 127 * 1 * 64);
-		queue.enqueueReadBuffer(output_fire1_conv1x1expand_layer, CL_TRUE, 0, ((127 * 127 * 1 * 64) * sizeof(float)), output4.data());
-		printf("output at expand fire:%f \n", output4[0]);
+		output4.resize(127 * 127 * 1 * 128);
+		queue.enqueueReadBuffer(output_fire1_conv1x1expand_layer, CL_TRUE, 0, ((127 * 127 * 1 * 128) * sizeof(float)), output4.data());
+		printf("output at expand fire:%f \n", output4[255]);
 		
 		//cl_int err = queue.finish();
 	}
@@ -339,7 +339,6 @@ int main()
 		std::cout << error.what() << std::endl;
 
 	}
-	getchar();
 	// Get available platforms
 	return 0;
 }
