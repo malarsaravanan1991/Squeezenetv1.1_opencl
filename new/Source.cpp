@@ -430,6 +430,70 @@ int main()
 	}
 	std::cout << Filter_convexpand3x3_fire7[0] << ' ';
 
+
+
+	/***********************************Getting  weights of the filter in to the array fire8squeeze  *******************/
+	std::fstream fire8squeeze("fire9_squeeze1x1.txt", std::ios_base::in);
+	var = 0;
+
+	std::vector<int> Filter_convsqueeze_fire8;
+	Filter_convsqueeze_fire8.resize(512 * 1 * 64);
+	no = 0;
+	while (fire8squeeze >> var)
+	{
+		Filter_convsqueeze_fire8[no] = var;
+
+		no++;
+	}
+	std::cout << Filter_convsqueeze_fire8[0] << ' ';
+	
+	/***********************************Getting  weights of the filter in to the array fire8expand1x1  *******************/
+	std::fstream fire8expand1x1("fire9_expand1x1.txt", std::ios_base::in);
+	var = 0;
+
+	std::vector<int> Filter_convexpand1x1_fire8;
+	Filter_convexpand1x1_fire8.resize(256 * 64);
+	no = 0;
+	while (fire8expand1x1 >> var)
+	{
+		Filter_convexpand1x1_fire8[no] = var;
+
+		no++;
+	}
+	std::cout << Filter_convexpand1x1_fire8[0] << ' ';
+
+	
+	/***********************************Getting  weights of the filter in to the array fire8expand3x3 *******************/
+	std::fstream fire8expand3x3("fire9_expand3x3.txt", std::ios_base::in);
+	var = 0;
+
+	std::vector<int> Filter_convexpand3x3_fire8;
+	Filter_convexpand3x3_fire8.resize(256 * 9 * 64);
+	no = 0;
+	while (fire8expand3x3 >> var)
+	{
+		Filter_convexpand3x3_fire8[no] = var;
+
+		no++;
+	}
+	std::cout << Filter_convexpand3x3_fire8[0] << ' ';
+
+	/***********************************Getting  weights of the filter in to the array conv1000 *******************/
+	std::fstream conv1000("conv10_w.txt", std::ios_base::in);
+	var = 0;
+
+	std::vector<int> Filter_conv1000;
+	Filter_conv1000.resize(512 * 1000);
+	no = 0;
+	while (conv1000 >> var)
+	{
+		Filter_conv1000[no] = var;
+
+		no++;
+	}
+	std::cout << Filter_conv1000[0] << ' ';
+
+
 	//import image to an array
 
 	unsigned int j;
@@ -1162,9 +1226,9 @@ int main()
 		kernelconv1x1fire7.setArg(4, input_size);
 
 
-		cl::NDRange globalsize3(64);
-		cl::NDRange localsize3(1);
-		queue.enqueueNDRangeKernel(kernelconv1x1fire7, cl::NullRange, globalsize3, localsize3);
+		cl::NDRange globalsize6(64);
+		cl::NDRange localsize6(1);
+		queue.enqueueNDRangeKernel(kernelconv1x1fire7, cl::NullRange, globalsize6, localsize6);
 
 		std::vector<int> out2;
 		out2.resize(13 * 13 * 1 * 64);
@@ -1194,7 +1258,7 @@ int main()
 		queue.enqueueNDRangeKernel(kernelconv1x1expandfire7, cl::NullRange, globalsize5, localsize5);
 
 
-		/***********************************************Fire block 6 - expand conv 3x3 ****************************************************/
+		/***********************************************Fire block 7 - expand conv 3x3 ****************************************************/
 		cl::Kernel kernelconv3x3expandfire7(program, "conv1");
 
 		// Create memory buffers
@@ -1227,9 +1291,98 @@ int main()
 		//for (int in = 0; in < 10; in++)
 		printf("output at expand fire7 layer: %d \n", out10[100]);
 		
+
+
+		/***********************************************Fire block 8 - squeeze conv 1x1 ****************************************************/
+		cl::Kernel kernelconv1x1fire8(program, "conv2");
+
+		// Create memory buffers
+
+		cl::Buffer Filter_conv_fire8_block1 = cl::Buffer(context, CL_MEM_READ_ONLY, 512 * 1 * 64 * sizeof(int));
+		cl::Buffer output_fire8_conv1x1_layer = cl::Buffer(context, CL_MEM_READ_WRITE, 13 * 13 * 1 * 64 * sizeof(int));
+
+		// Copy lists A and B to the memory buffers
+		queue.enqueueWriteBuffer(Filter_conv_fire8_block1, CL_TRUE, 0, 512 * 1 * 64 * sizeof(int), Filter_convsqueeze_fire8.data());
+		
+		input_channel = 512;
+		input_size = 13;
+
+		kernelconv1x1fire8.setArg(0, output_fire7_conv1x1expand_layer);
+		kernelconv1x1fire8.setArg(1, Filter_conv_fire8_block1);
+		kernelconv1x1fire8.setArg(2, output_fire8_conv1x1_layer);
+		kernelconv1x1fire8.setArg(3, input_channel);
+		kernelconv1x1fire8.setArg(4, input_size);
+
+
+		cl::NDRange globalid12(64);
+		cl::NDRange localid12(1);
+		queue.enqueueNDRangeKernel(kernelconv1x1fire8, cl::NullRange, globalid12, localid12);
+
+		std::vector<int> out6;
+		out6.resize(13 * 13 * 1 * 64);
+		queue.enqueueReadBuffer(output_fire8_conv1x1_layer, CL_TRUE, 0, ((13 * 13 * 1 * 64) * sizeof(int)), out6.data());
+		printf("output at fire8 squeezelayer:%d \n", out6[100]);
+
+		/***********************************************Fire block 8 - expand conv 1x1 ****************************************************/
+		cl::Kernel kernelconv1x1expandfire8(program, "conv2");
+		// Create memory buffers
+		cl::Buffer Filter_convexpand_fire8_block1 = cl::Buffer(context, CL_MEM_READ_ONLY, 256 * 1 * 64 * sizeof(int));
+		cl::Buffer output_fire8_conv1x1expand_layer = cl::Buffer(context, CL_MEM_READ_WRITE, 13 * 13 * 1 * 512 * sizeof(int));
+		// Copy lists A and B to the memory buffers
+		queue.enqueueWriteBuffer(Filter_convexpand_fire8_block1, CL_TRUE, 0, 256 * 1 * 64 * sizeof(int), Filter_convexpand1x1_fire8.data());
+		 
+		input_channel = 64;
+		input_size = 13;
+
+		kernelconv1x1expandfire8.setArg(0, output_fire8_conv1x1_layer);
+		kernelconv1x1expandfire8.setArg(1, Filter_convexpand_fire8_block1);
+		kernelconv1x1expandfire8.setArg(2, output_fire8_conv1x1expand_layer);
+		kernelconv1x1expandfire8.setArg(3, input_channel);
+		kernelconv1x1expandfire8.setArg(4, input_size);
+
+
+		cl::NDRange globalsize123(256);
+		cl::NDRange localsize123(1);
+		queue.enqueueNDRangeKernel(kernelconv1x1expandfire8, cl::NullRange, globalsize123, localsize123);
+
+
+		/***********************************************Fire block 8 - expand conv 3x3 ****************************************************/
+		cl::Kernel kernelconv3x3expandfire8(program, "conv1");
+
+		// Create memory buffers
+		cl::Buffer Filter_convexpand3x3_fire8_block1 = cl::Buffer(context, CL_MEM_READ_ONLY, 256 * 9 * 64 * sizeof(int));
+
+		// Copy lists A and B to the memory buffers
+		queue.enqueueWriteBuffer(Filter_convexpand3x3_fire8_block1, CL_TRUE, 0, 256 * 9 * 64 * sizeof(int), Filter_convexpand3x3_fire8.data());
+
+		input_channel = 64;
+		input_size = 13;
+		stride = 1;
+		start_channel_fire = 256;
+		output_size = 13;
+
+		kernelconv3x3expandfire8.setArg(0, output_fire8_conv1x1_layer);
+		kernelconv3x3expandfire8.setArg(1, Filter_convexpand3x3_fire8_block1);
+		kernelconv3x3expandfire8.setArg(2, output_fire8_conv1x1expand_layer);
+		kernelconv3x3expandfire8.setArg(3, input_channel);
+		kernelconv3x3expandfire8.setArg(4, input_size);
+		kernelconv3x3expandfire8.setArg(5, stride);
+		kernelconv3x3expandfire8.setArg(6, output_size);
+		kernelconv3x3expandfire8.setArg(7, start_channel_fire);
+
+		cl::NDRange globalid6(256);
+		cl::NDRange localid6(1);
+		queue.enqueueNDRangeKernel(kernelconv3x3expandfire8, cl::NullRange, globalid6, localid6);
+		std::vector<int> out14;
+		out14.resize(13 * 13 * 1 * 512);
+		queue.enqueueReadBuffer(output_fire8_conv1x1expand_layer, CL_TRUE, 0, ((13 * 13 * 1 * 512) * sizeof(int)), out14.data());
+		//for (int in = 0; in < 10; in++)
+		printf("output at expand fire8 layer: %d \n", out14[110]);
+
+		status = queue.finish();
+		printf("finishing all fire blocks of the squeezenet %d \n \n \n", status);
+	
 	}
-
-
 	catch (std::runtime_error error) {
 		std::cout << error.what() << std::endl;
 		
