@@ -479,7 +479,7 @@ int main()
 	std::cout << Filter_convexpand3x3_fire8[0] << ' ';
 
 	/***********************************Getting  weights of the filter in to the array conv1000 *******************/
-	std::fstream conv1000("conv10_w.txt", std::ios_base::in);
+	std::fstream conv1000("conv1000.txt", std::ios_base::in);
 	var = 0;
 
 	std::vector<int> Filter_conv1000;
@@ -1381,6 +1381,38 @@ int main()
 
 		status = queue.finish();
 		printf("finishing all fire blocks of the squeezenet %d \n \n \n", status);
+
+
+
+		/***********************************************Conv 1x1 -1000 kernels****************************************************/
+		cl::Kernel kernelconv1000(program, "conv2");
+
+		// Create memory buffers
+
+		cl::Buffer Filter_conv1000_1 = cl::Buffer(context, CL_MEM_READ_ONLY, 512 * 1 * 1000 * sizeof(int));
+		cl::Buffer output_conv1000_layer = cl::Buffer(context, CL_MEM_READ_WRITE, 13 * 13 * 1 * 1000 * sizeof(int));
+
+		// Copy lists A and B to the memory buffers
+		queue.enqueueWriteBuffer(Filter_conv1000_1, CL_TRUE, 0, 512 * 1 * 1000 * sizeof(int), Filter_conv1000.data());
+
+		input_channel = 512;
+		input_size = 13;
+
+		kernelconv1000.setArg(0, output_fire8_conv1x1expand_layer);
+		kernelconv1000.setArg(1, Filter_conv1000_1);
+		kernelconv1000.setArg(2, output_conv1000_layer);
+		kernelconv1000.setArg(3, input_channel);
+		kernelconv1000.setArg(4, input_size);
+
+
+		cl::NDRange globalid13(1000);
+		cl::NDRange localid13(1);
+		queue.enqueueNDRangeKernel(kernelconv1000, cl::NullRange, globalid12, localid12);
+
+		std::vector<int> out61;
+		out61.resize(13 * 13 * 1 * 1000);
+		queue.enqueueReadBuffer(output_conv1000_layer, CL_TRUE, 0, ((13 * 13 * 1 * 1000) * sizeof(int)), out61.data());
+		printf("output at final conv1x1 squeezelayer:%d \n", out61[3442]);
 	
 	}
 	catch (std::runtime_error error) {
