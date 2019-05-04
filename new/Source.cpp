@@ -116,7 +116,7 @@ int main()
 		//std::cout << Filter_conv1[i] << ' ';
 		i++;
 	}
-	
+
 
 	//***********************************Getting  weights of the filter in to the array for conv 1x1 squeezelayer *******************//
 	std::fstream fire1squeeze1x1("fire2squeeze1x1.txt", std::ios_base::in);
@@ -194,7 +194,7 @@ int main()
 
 	/***********************************Getting  weights of the filter in to the array fire2expand3x3 *******************/
 	std::fstream fire2expand3x3("fire3_expand3x3.txt", std::ios_base::in);
-	var=0;
+	var = 0;
 
 	std::vector<int> Filter_convexpand3x3_fire2;
 	Filter_convexpand3x3_fire2.resize(64 * 9 * 16);
@@ -221,7 +221,7 @@ int main()
 		no++;
 	}
 	std::cout << Filter_convsqueeze_fire3[0] << ' ';
-	
+
 	/***********************************Getting  weights of the filter in to the array fire3expand1x1  *******************/
 	std::fstream fire3expand1x1("fire4_expand1x1.txt", std::ios_base::in);
 	var = 0;
@@ -331,7 +331,7 @@ int main()
 
 	std::vector<int> Filter_convexpand3x3_fire5;
 	Filter_convexpand3x3_fire5.resize(192 * 9 * 48);
-	no= 0;
+	no = 0;
 	while (fire5expand3x3 >> var)
 	{
 		Filter_convexpand3x3_fire5[no] = var;
@@ -339,7 +339,7 @@ int main()
 		no++;
 	}
 	std::cout << Filter_convexpand3x3_fire5[0] << ' ';
-	
+
 	/***********************************Getting  weights of the filter in to the array fire6squeeze  *******************/
 	std::fstream fire6squeeze("fire7_squeeze1x1.txt", std::ios_base::in);
 	var = 0;
@@ -446,7 +446,7 @@ int main()
 		no++;
 	}
 	std::cout << Filter_convsqueeze_fire8[0] << ' ';
-	
+
 	/***********************************Getting  weights of the filter in to the array fire8expand1x1  *******************/
 	std::fstream fire8expand1x1("fire9_expand1x1.txt", std::ios_base::in);
 	var = 0;
@@ -462,7 +462,7 @@ int main()
 	}
 	std::cout << Filter_convexpand1x1_fire8[0] << ' ';
 
-	
+
 	/***********************************Getting  weights of the filter in to the array fire8expand3x3 *******************/
 	std::fstream fire8expand3x3("fire9_expand3x3.txt", std::ios_base::in);
 	var = 0;
@@ -650,7 +650,7 @@ int main()
 		std::vector<int> output3;
 		output3.resize(55 * 55 * 1 * 16);
 		queue.enqueueReadBuffer(output_fire1_conv1x1_layer, CL_TRUE, 0, ((55 * 55 * 1 * 16) * sizeof(int)), output3.data());
-		
+
 		printf("output at third squeezelayer:%d \n", output3[100]);
 
 		/***********************************************Fire block 1 - expand conv 1x1 ***************************************************/
@@ -705,9 +705,9 @@ int main()
 		//std::cout << output4.max_size() << std::endl;
 		output4.resize(55 * 55 * 1 * 128);
 		queue.enqueueReadBuffer(output_fire1_conv1x1expand_layer, CL_TRUE, 0, ((55 * 55 * 1 * 128) * sizeof(int)), output4.data());
-		
+
 		printf("output at expand fire:%d \n", output4[1002]);
- 
+
 		/***********************************************Fire block 2 - squeeze conv 1x1 ****************************************************/
 		cl::Kernel kernelconv1x1fire2(program, "conv2");
 
@@ -738,7 +738,7 @@ int main()
 		output5.resize(55 * 55 * 1 * 16);
 		queue.enqueueReadBuffer(output_fire2_conv1x1_layer, CL_TRUE, 0, ((55 * 55 * 1 * 16) * sizeof(int)), output5.data());
 		printf("output at fire2 squeezelayer:%d \n", output5[100]);
-	
+
 		/***********************************************Fire block 2 - expand conv 1x1 ****************************************************/
 		cl::Kernel kernelconv1x1expandfire2(program, "conv2");
 		// Create memory buffers
@@ -793,12 +793,12 @@ int main()
 		output6.resize(55 * 55 * 1 * 128);
 		queue.enqueueReadBuffer(output_fire2_conv1x1expand_layer, CL_TRUE, 0, ((55 * 55 * 1 * 128) * sizeof(int)), output6.data());
 		printf("output at expand fire2:%d \n", output6[100]);
-		
+
 		////////////////////////////////// Pooling layer -2 //////////////////////////////////////////////////////////////////////////
 
 		// Make kernel
 		cl::Kernel kernelpool1(program, "pool");
-		
+
 		// Create memory buffers
 		cl::Buffer output_second_fire_pool_layer = cl::Buffer(context, CL_MEM_WRITE_ONLY, 27 * 27 * 1 * 128 * sizeof(int));
 
@@ -817,13 +817,13 @@ int main()
 		output7.resize(27 * 27 * 1 * 128);
 		queue.enqueueReadBuffer(output_second_fire_pool_layer, CL_TRUE, 0, ((27 * 27 * 1 * 128) * sizeof(int)), output7.data());
 		printf("output at pooling layer 2:%d \n", output7[100]);
-	
+
 		cl_int status = queue.finish();
 		printf("finishing the first two fire blocks of the squeezenet %d \n \n \n", status);
 
 
 
-	
+
 		/***********************************************Fire block 3 - squeeze conv 1x1 ****************************************************/
 		cl::Kernel kernelconv1x1fire3(program, "conv2");
 
@@ -854,7 +854,7 @@ int main()
 		output8.resize(27 * 27 * 1 * 32);
 		queue.enqueueReadBuffer(output_fire3_conv1x1_layer, CL_TRUE, 0, ((27 * 27 * 1 * 32) * sizeof(int)), output8.data());
 		printf("output at fire3 squeezelayer:%d \n", output8[100]);
-		
+
 		/***********************************************Fire block 3 - expand conv 1x1 ****************************************************/
 		cl::Kernel kernelconv1x1expandfire3(program, "conv2");
 		// Create memory buffers
@@ -996,7 +996,7 @@ int main()
 		output11.resize(27 * 27 * 1 * 256);
 		queue.enqueueReadBuffer(output_fire4_conv1x1expand_layer, CL_TRUE, 0, ((27 * 27 * 1 * 256) * sizeof(int)), output11.data());
 		//for (int in = 0; in < 10; in++)
-			printf("output at expand fire4 layer: %d \n", output11[100]);
+		printf("output at expand fire4 layer: %d \n", output11[100]);
 
 		////////////////////////////////// Pooling layer -3 //////////////////////////////////////////////////////////////////////////
 
@@ -1055,7 +1055,7 @@ int main()
 		out.resize(13 * 13 * 1 * 48);
 		queue.enqueueReadBuffer(output_fire5_conv1x1_layer, CL_TRUE, 0, ((13 * 13 * 1 * 48) * sizeof(int)), out.data());
 		printf("output at fire5 squeezelayer:%d \n", out[1000]);
-		
+
 		/***********************************************Fire block 5 - expand conv 1x1 ****************************************************/
 		cl::Kernel kernelconv1x1expandfire5(program, "conv2");
 		// Create memory buffers
@@ -1177,7 +1177,7 @@ int main()
 
 		// Copy lists A and B to the memory buffers
 		queue.enqueueWriteBuffer(Filter_convexpand3x3_fire6_block1, CL_TRUE, 0, 192 * 9 * 48 * sizeof(int), Filter_convexpand3x3_fire6.data());
-		  
+
 		input_channel = 48;
 		input_size = 13;
 		stride = 1;
@@ -1290,7 +1290,7 @@ int main()
 		queue.enqueueReadBuffer(output_fire7_conv1x1expand_layer, CL_TRUE, 0, ((13 * 13 * 1 * 512) * sizeof(int)), out10.data());
 		//for (int in = 0; in < 10; in++)
 		printf("output at expand fire7 layer: %d \n", out10[100]);
-		
+
 
 
 		/***********************************************Fire block 8 - squeeze conv 1x1 ****************************************************/
@@ -1303,7 +1303,7 @@ int main()
 
 		// Copy lists A and B to the memory buffers
 		queue.enqueueWriteBuffer(Filter_conv_fire8_block1, CL_TRUE, 0, 512 * 1 * 64 * sizeof(int), Filter_convsqueeze_fire8.data());
-		
+
 		input_channel = 512;
 		input_size = 13;
 
@@ -1330,7 +1330,7 @@ int main()
 		cl::Buffer output_fire8_conv1x1expand_layer = cl::Buffer(context, CL_MEM_READ_WRITE, 13 * 13 * 1 * 512 * sizeof(int));
 		// Copy lists A and B to the memory buffers
 		queue.enqueueWriteBuffer(Filter_convexpand_fire8_block1, CL_TRUE, 0, 256 * 1 * 64 * sizeof(int), Filter_convexpand1x1_fire8.data());
-		 
+
 		input_channel = 64;
 		input_size = 13;
 
@@ -1412,12 +1412,54 @@ int main()
 		std::vector<int> out61;
 		out61.resize(13 * 13 * 1 * 1000);
 		queue.enqueueReadBuffer(output_conv1000_layer, CL_TRUE, 0, ((13 * 13 * 1 * 1000) * sizeof(int)), out61.data());
-		printf("output at final conv1x1 squeezelayer:%d \n", out61[3442]);
-	
+		//or (int in = 0; in < 100; in++)
+		printf("output at final conv1x1 squeezelayer:%d \n", out61[0]);
+
+
+		////////////////////////////////// Average Pooling layer -13x13 //////////////////////////////////////////////////////////////////////////
+
+		// Make kernel
+		cl::Kernel kernelpool13(program, "avgpool");
+
+		// Create memory buffers
+		cl::Buffer output_avgpool_layer = cl::Buffer(context, CL_MEM_WRITE_ONLY, 13 * 13 * 1 * 256 * sizeof(int));
+
+		kernelpool13.setArg(0, output_conv1000_layer);
+		kernelpool13.setArg(1, output_avgpool_layer);
+		
+
+		cl::NDRange globalsize1273(1000);
+		cl::NDRange localsize1273(1);
+		queue.enqueueNDRangeKernel(kernelpool13, cl::NullRange, globalsize1273, localsize1273);
+		std::vector<int> finaloutput;
+		finaloutput.resize(1000);
+		queue.enqueueReadBuffer(output_avgpool_layer, CL_TRUE, 0, ((1000) * sizeof(int)), finaloutput.data());
+		//for (int in = 0; in < 100 ; in++)
+		printf("output at avg pooling : %d \n", finaloutput[45]);
+
+		status = queue.finish();
+		printf("finishing the avg pool of the squeezenet %d \n \n \n", status);
+
+		/************************************** Softmax layer ************************************************************/
+
+		int max = 0;
+		int sum = 0;
+		for (int z = 0; z < 1000; z++)
+		{
+			if (max < finaloutput[z])
+				max = finaloutput[z];
+		}
+		for (int i = 0; i <	1000; i++) {
+		finaloutput[i] = exp(finaloutput[i] - max);		// avoid overflow
+			sum += finaloutput[i];
+		}
+			for (int i = 0; i < 1000; i++)
+				finaloutput[i] /= sum;
+			printf("Completed successfully \n \n \n");
 	}
 	catch (std::runtime_error error) {
 		std::cout << error.what() << std::endl;
-		
+
 	}
 	// Get available platforms
 	return 0;

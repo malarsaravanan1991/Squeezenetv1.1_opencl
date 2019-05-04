@@ -1,7 +1,7 @@
 //pipe int p0 __attribute__((xcl_reqd_pipe_depth(128)));
 __kernel
 void  conv1(__global const int* image, __global const int* Filter_conv, __global int* output_first_layer,
-	int input_channel, int input_size, int stride, int output_size, int start_channel_fire) 
+	int input_channel, int input_size, int stride, int output_size, int start_channel_fire)
 {
 	int filter_loc = 0;
 	int output_first_layer_loc = 0;
@@ -37,7 +37,7 @@ void  conv1(__global const int* image, __global const int* Filter_conv, __global
 			output_first_layer[i * output_size + j] = (tmp > 0.0) ? tmp : 0.0;
 		}
 	}
-							
+
 }
 
 __kernel void pool(__global int* input_im, __global int* output_im, const int input_size, const int output_size)
@@ -81,7 +81,7 @@ __kernel void conv2(global const int* input_image_conv1x1, global const int* fil
 	filter_conv1x1 += filter_index * input_channels;
 	output_conv1x1_layer += filter_index * input_size * input_size;//start_channel is for 1x1 feature map in fire layer
 		//loop over output feature map
-	
+
 	for (int i = 0; i < input_size; i++)
 	{
 		for (int j = 0; j < input_size; j++)
@@ -91,7 +91,7 @@ __kernel void conv2(global const int* input_image_conv1x1, global const int* fil
 			{
 				//	tmp += input_image_conv1x1[0] * filter_conv1x1[0];
 				tmp += input_image_conv1x1[k * input_size * input_size + i * input_size + j] * filter_conv1x1[k];
-				
+
 				//add relu after conv
 				output_conv1x1_layer[i * input_size + j] = (tmp > 0.0) ? tmp : 0.0;
 			}
@@ -99,21 +99,15 @@ __kernel void conv2(global const int* input_image_conv1x1, global const int* fil
 	}
 }
 
-__kernel void conv3(global const int* input_image_conv1x1, global const int* filter_conv1x1, global int* output_conv1x1_layer,
-	int input_channels, int input_size)
+__kernel void avgpool(global const int* input_image_avgpool, global int* output_avgpool)
 {
-	/*int tmp = 0;
-				tmp += input_image_conv1x1[0] * filter_conv1x1[0];
-				printf("input image = %d \n", input_image_conv1x1[0]);
-				printf("filter = %d \n", filter_conv1x1[0]);
-					//add relu after conv
-				output_conv1x1_layer[0] = tmp;
-				printf("tmp = %d \n", tmp);*/
-	            int tmp = 0, i = 0, j = 0, k = 0;
-				tmp += input_image_conv1x1[k * input_size * input_size + i * input_size + j] * filter_conv1x1[k];
-				printf("tmp = %d \n", tmp);
-				//add relu after conv
-				output_conv1x1_layer[i * input_size + j] = tmp;
-			
+	int index = get_global_id(0);//get class score index
+	input_image_avgpool += 169 * index;
+	int tmp = 0;
+	for (int i = 0; i < 169; i++)
+	{
+		tmp += input_image_avgpool[i];
+	}
+	output_avgpool[index] = tmp / 169;
 }
 
